@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF Voice — Free PDF Text to Speech Online | No Signup</title>
+  <meta name="description" content="Listen to any PDF for free. Upload your PDF and our tool reads it aloud using your browser's built-in voice. No account. No upload. 100% private." />
+
+  <meta property="og:title" content="PDF Voice — Free PDF Text to Speech" />
+  <meta property="og:description" content="Upload a PDF. Press play. Listen. Free, private, no signup." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://pdfvoice.netlify.app" />
+  <meta property="og:image" content="https://pdfvoice.netlify.app/og-image.svg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="PDF Voice — Free PDF Text to Speech" />
+  <meta name="twitter:description" content="Upload a PDF. Press play. Listen. Free, private, no signup." />
+  <meta name="twitter:image" content="https://pdfvoice.netlify.app/og-image.svg" />
+  <meta name="robots" content="index, follow" />
+  <meta name="keywords" content="PDF text to speech, PDF reader, read PDF aloud, free PDF TTS, PDF voice, accessibility" />
+
+  <link rel="canonical" href="https://pdfvoice.netlify.app" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#4F8EF7" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "PDF Voice",
+    "url": "https://pdfvoice.netlify.app",
+    "description": "Free PDF text-to-speech tool. Read any PDF aloud in your browser. No signup, no upload, 100% private.",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "featureList": "PDF text extraction, text-to-speech, page navigation, offline PWA"
+  }
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <nav id="navbar">
+    <span class="brand">PDF Voice</span>
+    <span class="tagline">Free. Private. In your browser.</span>
+    <div class="nav-actions">
+      <a href="#faq" class="nav-link">FAQ</a>
+      <button id="install-btn" class="btn-ghost nav-share hidden" type="button">Install app</button>
+      <button id="theme-toggle" class="btn-icon" type="button" title="Toggle theme" aria-label="Toggle light/dark mode">🌙</button>
+      <button id="share-btn" class="btn-ghost nav-share" type="button">Share</button>
+    </div>
+  </nav>
+
+  <div id="speech-warning" class="banner-warning hidden" role="alert">
+    Your browser does not support text-to-speech. Try Chrome, Edge, or Safari for the best experience.
+  </div>
+
+  <section id="upload-zone">
+    <div id="drop-area">
+      <div class="upload-icon">📄</div>
+      <h2>Drop your PDF here</h2>
+      <p>or click to browse</p>
+      <input type="file" id="file-input" accept=".pdf,application/pdf" hidden />
+      <button id="browse-btn" class="btn-primary" type="button">Choose PDF</button>
+    </div>
+  </section>
+
+  <section id="reader-panel" class="hidden">
+    <div id="file-info">
+      <span id="file-name">document.pdf</span>
+      <span id="page-info">
+        Page <span id="current-page">1</span> of <span id="total-pages">?</span>
+      </span>
+      <input type="number" id="page-jump" min="1" placeholder="Go to…" aria-label="Jump to page" />
+      <button id="change-file-btn" class="btn-ghost" type="button">Change file</button>
+    </div>
+
+    <div id="text-display">
+      <div id="text-content"></div>
+    </div>
+
+    <div id="controls">
+      <div class="controls-row controls-main">
+        <button id="prev-btn" class="btn-icon" type="button" title="Previous page">⬅</button>
+        <button id="play-btn" class="btn-primary" type="button">▶ Play</button>
+        <button id="pause-btn" class="btn-secondary hidden" type="button">⏸ Pause</button>
+        <button id="stop-btn" class="btn-ghost" type="button">⏹ Stop</button>
+        <button id="next-btn" class="btn-icon" type="button" title="Next page">➡</button>
+      </div>
+
+      <div class="controls-row controls-settings">
+        <div class="setting-group setting-speed">
+          <label for="speed-slider">Speed: <span id="speed-val">1x</span></label>
+          <input type="range" id="speed-slider" min="0.5" max="2" step="0.1" value="1" />
+        </div>
+        <div class="setting-group setting-voice">
+          <label for="voice-select">Voice</label>
+          <select id="voice-select" aria-label="Select voice"></select>
+        </div>
+      </div>
+
+      <div id="progress-bar-container">
+        <div id="progress-bar"></div>
+      </div>
+
+      <p class="keyboard-legend" aria-hidden="true">
+        <kbd>Space</kbd> play/pause · <kbd>←</kbd><kbd>→</kbd> pages · <kbd>Esc</kbd> stop
+      </p>
+
+      <!-- Ad slot: below controls — uncomment after AdSense approval (see LAUNCH.md) -->
+      <aside class="ad-slot ad-slot-controls" aria-hidden="true">
+        <!--
+        <ins class="adsbygoogle"
+          style="display:block"
+          data-ad-client="ca-pub-XXXXXXXX"
+          data-ad-slot="XXXXXXXX"
+          data-ad-format="auto"
+          data-full-width-responsive="true"></ins>
+        -->
+      </aside>
+    </div>
+  </section>
+
+  <section id="landing" class="landing">
+    <!-- Ad slot: above FAQ — uncomment after AdSense approval (see LAUNCH.md) -->
+    <aside class="ad-slot ad-slot-faq" aria-hidden="true">
+      <!--
+      <ins class="adsbygoogle"
+        style="display:block"
+        data-ad-client="ca-pub-XXXXXXXX"
+        data-ad-slot="XXXXXXXX"
+        data-ad-format="horizontal"
+        data-full-width-responsive="true"></ins>
+      -->
+    </aside>
+    <h2 class="landing-title">Why PDF Voice?</h2>
+    <div class="feature-grid">
+      <article class="feature-card">
+        <span class="feature-icon">🔒</span>
+        <h3>100% Private</h3>
+        <p>Your files never leave your device. No uploads, no servers, no tracking of your documents.</p>
+      </article>
+      <article class="feature-card">
+        <span class="feature-icon">⚡</span>
+        <h3>Instant</h3>
+        <p>No signup, no waiting. Drop a PDF and press play — it works immediately in your browser.</p>
+      </article>
+      <article class="feature-card">
+        <span class="feature-icon">🆓</span>
+        <h3>Free forever</h3>
+        <p>No paywalls, no subscriptions, no API keys. The best free PDF text-to-speech tool online.</p>
+      </article>
+    </div>
+
+    <h2 class="landing-title">Who uses PDF Voice?</h2>
+    <div class="use-case-grid">
+      <article class="use-case">
+        <h3>Students</h3>
+        <p>Listen to research papers and textbooks while commuting or exercising.</p>
+      </article>
+      <article class="use-case">
+        <h3>Professionals</h3>
+        <p>Absorb lengthy reports and contracts without eye strain.</p>
+      </article>
+      <article class="use-case">
+        <h3>Accessibility</h3>
+        <p>Built for anyone who prefers audio over reading on screen.</p>
+      </article>
+    </div>
+
+    <h2 class="landing-title" id="faq">FAQ</h2>
+    <dl class="faq-list">
+      <dt>Is PDF Voice really free?</dt>
+      <dd>Yes, completely. No hidden fees or premium tiers.</dd>
+      <dt>Does my PDF get uploaded to a server?</dt>
+      <dd>No. Everything stays in your browser. We never see your file.</dd>
+      <dt>What browsers support this?</dt>
+      <dd>Chrome, Edge, Safari, and Firefox. Chrome generally has the best voices.</dd>
+      <dt>Can it read scanned PDFs?</dt>
+      <dd>Not yet. Scanned PDFs are images; OCR support is planned for a future update.</dd>
+      <dt>How many pages can it read?</dt>
+      <dd>No limit. Works on PDFs of any size your browser can handle.</dd>
+    </dl>
+  </section>
+
+  <footer>
+    <p>PDF Voice — <span class="accent">100% free</span>. Your PDF never leaves your browser. No upload, no server.</p>
+    <p class="footer-copy">© <span id="year"></span> PDF Voice</p>
+  </footer>
+
+  <div id="toast-container" aria-live="polite"></div>
+
+  <script src="config.js"></script>
+  <script src="ads.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

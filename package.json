@@ -1,0 +1,14 @@
+{
+  "name": "pdf-voice",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Free browser-based PDF text-to-speech",
+  "scripts": {
+    "dev": "python3 scripts/serve.py",
+    "start": "python3 scripts/serve.py",
+    "test": "node tests/qa.mjs && node tests/e2e.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.49.0"
+  }
+}
